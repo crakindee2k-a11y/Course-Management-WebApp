@@ -1,0 +1,94 @@
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f8fafc">
+
+<script>
+// Immediate Theme Application - Prevents Flash of Wrong Theme
+(function() {
+    'use strict';
+    
+    try {
+        // Get stored theme preference
+        var storedTheme = null;
+        try {
+            storedTheme = localStorage.getItem('app-theme');
+        } catch (e) {
+            // localStorage not available
+        }
+        
+        // Get system theme preference
+        var systemTheme = 'light';
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                systemTheme = 'dark';
+            }
+        } catch (e) {
+            // matchMedia not available
+        }
+        
+        // Determine theme to apply
+        var theme = storedTheme || systemTheme;
+        
+        // Apply theme immediately
+        var root = document.documentElement;
+        var storedPerf = null;
+        try { storedPerf = localStorage.getItem('app-perf'); } catch (e) {}
+        
+        var perfOverride = null;
+        try {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('perf')) {
+                perfOverride = params.get('perf');
+            }
+        } catch (e) {}
+        
+        if (perfOverride === '1' || perfOverride === 'true') {
+            storedPerf = '1';
+            try { localStorage.setItem('app-perf', '1'); } catch (e) {}
+        } else if (perfOverride === '0' || perfOverride === 'false') {
+            storedPerf = '0';
+            try { localStorage.setItem('app-perf', '0'); } catch (e) {}
+        }
+        
+        if (storedPerf === '1') {
+            root.setAttribute('data-perf', 'true');
+        } else {
+            root.removeAttribute('data-perf');
+        }
+        
+        root.setAttribute('data-theme', theme);
+        
+        // Set initial colors to prevent flash
+        if (theme === 'dark') {
+            root.style.backgroundColor = '#1a1a1d';
+            root.style.color = '#f8f9fa';
+            
+            // Update meta theme-color
+            var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            if (metaThemeColor) {
+                metaThemeColor.content = '#1a1a1d';
+            }
+        } else {
+            root.style.backgroundColor = '#f8fafc';
+            root.style.color = '#0f172a';
+            
+            // Update meta theme-color
+            var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            if (metaThemeColor) {
+                metaThemeColor.content = '#f8fafc';
+            }
+        }
+        
+        // Clean up inline styles once CSS loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                root.style.backgroundColor = '';
+                root.style.color = '';
+            }, 100);
+        });
+        
+    } catch (e) {
+        // Fallback - do nothing, let CSS handle defaults
+        console.warn('Theme initialization failed:', e);
+    }
+})();
+</script>

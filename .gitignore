@@ -1,0 +1,17 @@
+target/
+.idea/
+.settings/
+.project
+.classpath
+*.iml
+.vscode/
+.DS_Store
+**/node_modules/
+*.log
+
+# OS and editor specifics
+Thumbs.db
+ehthumbs.db
+*.swp
+*.swo
+*.tmp
