@@ -1,5 +1,7 @@
 package com.coursemanagement.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,14 +29,7 @@ public class DatabaseConnection {
      * @param context The servlet context containing database parameters
      */
     public static void initialize(ServletContext context) {
-        dbUrl = context.getInitParameter("DB_URL");
-        dbUsername = context.getInitParameter("DB_USERNAME");
-        dbPassword = context.getInitParameter("DB_PASSWORD");
-        
-        // Use default values if not configured
-        if (dbUrl == null) dbUrl = DEFAULT_DB_URL;
-        if (dbUsername == null) dbUsername = DEFAULT_USERNAME;
-        if (dbPassword == null) dbPassword = DEFAULT_PASSWORD;
+        loadConfiguration(context);
         
         // Load MySQL JDBC driver
         try {
@@ -44,6 +39,158 @@ public class DatabaseConnection {
             System.err.println("MySQL JDBC Driver not found: " + e.getMessage());
             throw new RuntimeException("Failed to load MySQL JDBC driver", e);
         }
+    }
+    
+    /**
+     * Loads configuration from environment variables (Railway, Docker, etc.)
+     * with servlet context and project defaults as fallbacks.
+     */
+    private static void loadConfiguration(ServletContext context) {
+        // Highest priority: environment variables / DATABASE_URL style strings
+        applyDatabaseUrlFromEnv();
+        
+        // Direct environment overrides for URL, username, and password
+        if (dbUrl == null) {
+            String directUrl = getFirstNonEmptyEnv(
+                "JDBC_DATABASE_URL",
+                "DB_URL"
+            );
+            if (directUrl != null) {
+                dbUrl = normalizeJdbcUrl(directUrl);
+            }
+        }
+        
+        if (dbUrl == null) {
+            String host = getFirstNonEmptyEnv("MYSQLHOST", "MYSQL_HOST");
+            String database = getFirstNonEmptyEnv("MYSQLDATABASE", "MYSQL_DB", "DB_NAME");
+            String port = getFirstNonEmptyEnv("MYSQLPORT", "MYSQL_PORT");
+            if (host != null && database != null) {
+                dbUrl = buildJdbcUrl(host, port != null ? port : "3306", database);
+            }
+        }
+        
+        if (dbUsername == null) {
+            dbUsername = getFirstNonEmptyEnv(
+                "JDBC_DATABASE_USERNAME",
+                "DB_USERNAME",
+                "DATABASE_USERNAME",
+                "MYSQLUSER",
+                "MYSQL_USER"
+            );
+        }
+        
+        if (dbPassword == null) {
+            dbPassword = getFirstNonEmptyEnv(
+                "JDBC_DATABASE_PASSWORD",
+                "DB_PASSWORD",
+                "DATABASE_PASSWORD",
+                "MYSQLPASSWORD",
+                "MYSQL_PASSWORD"
+            );
+        }
+        
+        // Fallback to servlet context parameters if still missing
+        if (context != null) {
+            if (dbUrl == null) {
+                dbUrl = context.getInitParameter("DB_URL");
+            }
+            if (dbUsername == null) {
+                dbUsername = context.getInitParameter("DB_USERNAME");
+            }
+            if (dbPassword == null) {
+                dbPassword = context.getInitParameter("DB_PASSWORD");
+            }
+        }
+        
+        // Project defaults as last resort
+        if (dbUrl == null) dbUrl = DEFAULT_DB_URL;
+        if (dbUsername == null) dbUsername = DEFAULT_USERNAME;
+        if (dbPassword == null) dbPassword = DEFAULT_PASSWORD;
+    }
+    
+    /**
+     * Reads DATABASE_URL style environment variables and maps them to JDBC.
+     */
+    private static void applyDatabaseUrlFromEnv() {
+        String[] databaseUrlKeys = {"DATABASE_URL"};
+        String rawUrl = getFirstNonEmptyEnv(databaseUrlKeys);
+        
+        if (rawUrl == null) {
+            return;
+        }
+        
+        if (rawUrl.startsWith("jdbc:")) {
+            dbUrl = rawUrl;
+            return;
+        }
+        
+        try {
+            URI uri = new URI(rawUrl);
+            if ("mysql".equalsIgnoreCase(uri.getScheme())) {
+                String host = uri.getHost();
+                int port = uri.getPort();
+                String path = uri.getPath() != null ? uri.getPath() : "";
+                String query = uri.getQuery();
+                
+                StringBuilder jdbc = new StringBuilder("jdbc:mysql://");
+                jdbc.append(host != null ? host : "localhost");
+                if (port > 0) {
+                    jdbc.append(":").append(port);
+                }
+                jdbc.append(path);
+                if (query != null && !query.isEmpty()) {
+                    jdbc.append("?").append(query);
+                }
+                dbUrl = jdbc.toString();
+                
+                String userInfo = uri.getUserInfo();
+                if (userInfo != null) {
+                    String[] parts = userInfo.split(":", 2);
+                    if (dbUsername == null) {
+                        dbUsername = parts[0];
+                    }
+                    if (parts.length > 1 && dbPassword == null) {
+                        dbPassword = parts[1];
+                    }
+                }
+            } else {
+                dbUrl = rawUrl;
+            }
+        } catch (URISyntaxException e) {
+            dbUrl = rawUrl;
+        }
+    }
+    
+    private static String normalizeJdbcUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isEmpty()) {
+            return null;
+        }
+        if (rawUrl.startsWith("jdbc:")) {
+            return rawUrl;
+        }
+        if (rawUrl.startsWith("mysql://")) {
+            return rawUrl.replaceFirst("mysql://", "jdbc:mysql://");
+        }
+        return rawUrl;
+    }
+    
+    private static String buildJdbcUrl(String host, String port, String database) {
+        StringBuilder builder = new StringBuilder("jdbc:mysql://").append(host);
+        if (port != null && !port.isEmpty()) {
+            builder.append(":").append(port);
+        }
+        builder.append("/").append(database);
+        return builder.toString();
+    }
+    
+    private static String getFirstNonEmptyEnv(String... keys) {
+        for (String key : keys) {
+            String value = System.getenv(key);
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return null;
     }
     
     /**

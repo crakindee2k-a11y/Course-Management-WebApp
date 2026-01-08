@@ -205,6 +205,39 @@ See **[RESTART_COMMANDS.md](RESTART_COMMANDS.md)** for all restart options.
    http://localhost:8080/course-management-system
    ```
 
+## ☁️ Railway Deployment (Free Tier)
+
+Railway can build the Dockerfile in this repo and host both the web app (Tomcat) and a managed MySQL database.
+
+### 1. Prepare the repo
+- Push the latest code to GitHub (already done if you see this README online).
+- The provided `Dockerfile` performs a Maven build stage and deploys the WAR as `ROOT.war` inside Tomcat, so no extra steps are required.
+
+### 2. Create Railway services
+1. Log in to [Railway](https://railway.app) → **New Project** → **Deploy from Repo** → select this GitHub repo.
+2. Keep the default “Deploy Dockerfile” option.
+3. Inside the same project, click **Add Service → MySQL** to provision a managed MySQL instance (always-free while within quota).
+
+### 3. Configure environment variables
+Railway injects database credentials as env vars. The app now auto-detects the following keys (first one found wins):
+
+| Purpose | Preferred Vars |
+|---------|----------------|
+| Connection URL | `DATABASE_URL`, `JDBC_DATABASE_URL`, `DB_URL` |
+| Host/DB fallback | `MYSQLHOST` + `MYSQLDATABASE` (+ optional `MYSQLPORT`) |
+| Username | `JDBC_DATABASE_USERNAME`, `DB_USERNAME`, `MYSQLUSER` |
+| Password | `JDBC_DATABASE_PASSWORD`, `DB_PASSWORD`, `MYSQLPASSWORD` |
+
+For Railway specifically, you can simply set **`DATABASE_URL`** to the MySQL connection string that Railway shows (format: `mysql://USER:PASSWORD@HOST:PORT/DATABASE?ssl-mode=REQUIRED`). The app will parse it automatically.
+
+### 4. Redeploy
+- After env vars are set, hit **Deploy** (or trigger a redeploy) for the web service.
+- The container exposes port `8080`; Railway maps it to a public HTTPS URL automatically.
+
+### 5. Database initialization
+- `DatabaseConnection.initializeDatabase()` creates tables and inserts sample data on first run, so you don’t need manual SQL imports.
+- You can optionally connect to the Railway MySQL instance using their provided credentials to inspect/modify data.
+
 ### Auto-Initialization
 The system automatically:
 - Creates database tables on first run
