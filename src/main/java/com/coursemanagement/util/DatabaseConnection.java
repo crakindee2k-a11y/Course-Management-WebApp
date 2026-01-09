@@ -331,13 +331,14 @@ public class DatabaseConnection {
         Statement stmt = connection.createStatement();
         
         // Insert default users (passwords are BCrypt hashed version of "password123")
+        String defaultPasswordHash = PasswordUtil.hashPassword("password123");
         String insertDefaultUsers = "INSERT IGNORE INTO users (username, password, full_name, email, user_type) VALUES " +
-            "('admin', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'System Administrator', 'admin@coursemanagement.com', 'ADMIN'), " +
-            "('teacher1', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'Dr. John Smith', 'john.smith@university.edu', 'TEACHER'), " +
-            "('teacher2', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'Prof. Sarah Johnson', 'sarah.johnson@university.edu', 'TEACHER'), " +
-            "('student1', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'Alice Cooper', 'alice.cooper@student.edu', 'STUDENT'), " +
-            "('student2', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'Bob Wilson', 'bob.wilson@student.edu', 'STUDENT'), " +
-            "('student3', '$2a$10$rqKgWG3IElbdL4XOp5CzDOzRWRD3d4vBjYWOYTg8YAThH9A1D1.4W', 'Carol Davis', 'carol.davis@student.edu', 'STUDENT')";
+            "('admin', '" + defaultPasswordHash + "', 'System Administrator', 'admin@coursemanagement.com', 'ADMIN'), " +
+            "('teacher1', '" + defaultPasswordHash + "', 'Dr. John Smith', 'john.smith@university.edu', 'TEACHER'), " +
+            "('teacher2', '" + defaultPasswordHash + "', 'Prof. Sarah Johnson', 'sarah.johnson@university.edu', 'TEACHER'), " +
+            "('student1', '" + defaultPasswordHash + "', 'Alice Cooper', 'alice.cooper@student.edu', 'STUDENT'), " +
+            "('student2', '" + defaultPasswordHash + "', 'Bob Wilson', 'bob.wilson@student.edu', 'STUDENT'), " +
+            "('student3', '" + defaultPasswordHash + "', 'Carol Davis', 'carol.davis@student.edu', 'STUDENT')";
         
         // Insert sample courses
         String insertSampleCourses = "INSERT IGNORE INTO courses (course_code, course_name, description, credits, teacher_id, max_students) VALUES " +
@@ -348,6 +349,10 @@ public class DatabaseConnection {
         
         stmt.executeUpdate(insertDefaultUsers);
         System.out.println("Default users inserted");
+
+        String ensureDefaultPasswords = "UPDATE users SET password = '" + defaultPasswordHash + "' " +
+            "WHERE username IN ('admin','teacher1','teacher2','student1','student2','student3')";
+        stmt.executeUpdate(ensureDefaultPasswords);
         
         stmt.executeUpdate(insertSampleCourses);
         System.out.println("Sample courses inserted");
