@@ -64,6 +64,3 @@ The app auto-detects Railway's MySQL credentials and initializes the database on
 | Teacher | teacher1 | password123 |
 | Student | student1 | password123 |
 
-## License
-
-MIT
