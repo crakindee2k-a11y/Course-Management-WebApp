@@ -42,16 +42,6 @@ $TOMCAT_HOME/bin/catalina.sh run
 
 Database tables and sample data are created automatically on first run.
 
-## Deploy to Railway (Free)
-
-1. Fork/push this repo to GitHub
-2. Create a [Railway](https://railway.app) project from the repo
-3. Add a MySQL service in the same project
-4. Set environment variable `DATABASE_URL` to the Railway MySQL connection string
-5. Redeploy
-
-The app auto-detects Railway's MySQL credentials and initializes the database on startup.
-
 ## Live Demo
 
 - Deployed link: https://deens-course-management-webapp-production.up.railway.app/
