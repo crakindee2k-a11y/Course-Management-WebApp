@@ -52,6 +52,10 @@ Database tables and sample data are created automatically on first run.
 
 The app auto-detects Railway's MySQL credentials and initializes the database on startup.
 
+## Live Demo
+
+- Deployed link: https://deens-course-management-webapp-production.up.railway.app/
+
 ## Default Credentials
 
 | Role | Username | Password |
