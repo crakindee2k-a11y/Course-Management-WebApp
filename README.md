@@ -2,6 +2,18 @@
 
 A web-based course management platform built with Java Servlets, JSP, and MySQL. Supports role-based access for students, teachers, and administrators.
 
+## Live Demo
+
+- Deployed link: https://deens-course-management-webapp-production.up.railway.app/
+
+## Default Credentials
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | password123 |
+| Teacher | teacher1 | password123 |
+| Student | student1 | password123 |
+
 ## Tech Stack
 
 - **Backend:** Java 11, Servlets, JSP
@@ -41,16 +53,3 @@ $TOMCAT_HOME/bin/catalina.sh run
 ```
 
 Database tables and sample data are created automatically on first run.
-
-## Live Demo
-
-- Deployed link: https://deens-course-management-webapp-production.up.railway.app/
-
-## Default Credentials
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | password123 |
-| Teacher | teacher1 | password123 |
-| Student | student1 | password123 |
-
