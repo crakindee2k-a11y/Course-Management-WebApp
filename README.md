@@ -4,7 +4,7 @@ A web-based course management platform built with Java Servlets, JSP, and MySQL.
 
 ## Live Demo
 
-- Deployed link: https://deens-course-management-webapp-production.up.railway.app/
+- Deployed link: https://deens-course-management-webapp.up.railway.app/
 
 ## Default Credentials
 
